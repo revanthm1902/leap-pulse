@@ -1,6 +1,6 @@
 export interface SocialMention {
   id: string;
-  platform: "Twitter" | "Reddit" | "LinkedIn" | "Instagram" | "YouTube";
+  platform: "Twitter" | "Reddit" | "LinkedIn" | "Instagram" | "YouTube" | "GoogleNews";
   content: string;
   sentiment_score: number; // -1 to 1
   engagement: {
@@ -10,12 +10,21 @@ export interface SocialMention {
   };
   author: string;
   timestamp: string;
+  source_url?: string;
   priority: "CRITICAL ALERT" | "HIGH PRIORITY" | "MARKETING GOLD" | "NEUTRAL";
 }
 
-export interface ShareOfVoiceData {
-  name: string;
+export interface SentimentBreakdownData {
+  label: string;
   value: number;
+  count: number;
+  color: string;
+}
+
+export interface PlatformBreakdownData {
+  platform: string;
+  value: number;
+  count: number;
   color: string;
 }
 
@@ -25,7 +34,7 @@ export interface TrendingTopic {
   trend: "up" | "down" | "stable";
 }
 
-// Priority Rule: sentiment < -0.5 AND likes > 50 → CRITICAL ALERT
+// Priority classification aligned with backend sentiment.py
 function computePriority(
   sentiment: number,
   likes: number
@@ -46,6 +55,7 @@ const rawMentions: Omit<SocialMention, "priority">[] = [
     engagement: { likes: 342, shares: 89, comments: 56 },
     author: "@AnkitMehta_",
     timestamp: "2026-02-11T09:23:00Z",
+    source_url: "https://x.com/AnkitMehta_/status/1",
   },
   {
     id: "2",
@@ -56,6 +66,7 @@ const rawMentions: Omit<SocialMention, "priority">[] = [
     engagement: { likes: 578, shares: 134, comments: 91 },
     author: "u/StudyAbroad2026",
     timestamp: "2026-02-11T07:45:00Z",
+    source_url: "https://reddit.com/r/IELTS/comments/example2",
   },
   {
     id: "3",
@@ -66,6 +77,7 @@ const rawMentions: Omit<SocialMention, "priority">[] = [
     engagement: { likes: 67, shares: 12, comments: 23 },
     author: "Priya Sharma",
     timestamp: "2026-02-10T18:30:00Z",
+    source_url: "https://linkedin.com/posts/example3",
   },
   {
     id: "4",
@@ -76,6 +88,7 @@ const rawMentions: Omit<SocialMention, "priority">[] = [
     engagement: { likes: 1243, shares: 201, comments: 167 },
     author: "@rohit.dreams",
     timestamp: "2026-02-10T14:12:00Z",
+    source_url: "https://instagram.com/p/example4",
   },
   {
     id: "5",
@@ -86,6 +99,7 @@ const rawMentions: Omit<SocialMention, "priority">[] = [
     engagement: { likes: 89, shares: 34, comments: 45 },
     author: "StudyVloggerIN",
     timestamp: "2026-02-09T21:00:00Z",
+    source_url: "https://youtube.com/watch?v=example5",
   },
 ];
 
@@ -94,10 +108,18 @@ export const socialMentions: SocialMention[] = rawMentions.map((m) => ({
   priority: computePriority(m.sentiment_score, m.engagement.likes),
 }));
 
-export const shareOfVoiceData: ShareOfVoiceData[] = [
-  { name: "LeapScholar", value: 48, color: "#6366f1" },
-  { name: "Yocket", value: 31, color: "#818cf8" },
-  { name: "IDP", value: 21, color: "#c7d2fe" },
+export const sentimentBreakdown: SentimentBreakdownData[] = [
+  { label: "Positive", value: 52, count: 26, color: "#22c55e" },
+  { label: "Negative", value: 30, count: 15, color: "#ef4444" },
+  { label: "Neutral", value: 18, count: 9, color: "#94a3b8" },
+];
+
+export const platformBreakdown: PlatformBreakdownData[] = [
+  { platform: "Reddit", value: 36, count: 18, color: "#ff4500" },
+  { platform: "Twitter", value: 24, count: 12, color: "#1d9bf0" },
+  { platform: "LinkedIn", value: 16, count: 8, color: "#0a66c2" },
+  { platform: "YouTube", value: 14, count: 7, color: "#ff0000" },
+  { platform: "GoogleNews", value: 10, count: 5, color: "#4285f4" },
 ];
 
 export const trendingTopics: TrendingTopic[] = [

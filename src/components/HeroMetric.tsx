@@ -1,11 +1,4 @@
-import { ArrowUpRight } from "lucide-react";
-import {
-  netSentimentScore,
-  sentimentChange,
-  weeklyTrend,
-  totalMentions,
-  avgEngagement,
-} from "../data/mockData";
+import { ArrowUpRight, Eye, Users } from "lucide-react";
 import {
   AreaChart,
   Area,
@@ -15,130 +8,182 @@ import {
   Tooltip,
 } from "recharts";
 
+interface HeroMetricProps {
+  netSentimentScore: number;
+  sentimentChange: number;
+  weeklyTrend: { day: string; score: number }[];
+  totalMentions: number;
+  avgEngagement: number;
+}
+
 function SentimentGauge({ score }: { score: number }) {
   const radius = 80;
-  const circumference = Math.PI * radius; // semi-circle
+  const circumference = Math.PI * radius;
   const progress = (score / 100) * circumference;
   const dashOffset = circumference - progress;
 
-  // Color based on score
-  const getColor = (s: number) => {
-    if (s >= 70) return "#6366f1";
-    if (s >= 40) return "#f59e0b";
-    return "#ef4444";
-  };
-
   return (
     <div className="relative flex flex-col items-center">
-      <svg width="200" height="120" viewBox="0 0 200 120">
-        {/* Background arc */}
+      <svg width="220" height="130" viewBox="0 0 220 130">
+        <defs>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#818cf8" />
+            <stop offset="100%" stopColor="#6366f1" />
+          </linearGradient>
+        </defs>
+        {/* Track */}
         <path
-          d="M 20 100 A 80 80 0 0 1 180 100"
+          d="M 25 110 A 85 85 0 0 1 195 110"
           fill="none"
-          stroke="#e5e7eb"
-          strokeWidth="12"
+          stroke="#f1f5f9"
+          strokeWidth="14"
           strokeLinecap="round"
         />
-        {/* Progress arc */}
+        {/* Progress */}
         <path
-          d="M 20 100 A 80 80 0 0 1 180 100"
+          d="M 25 110 A 85 85 0 0 1 195 110"
           fill="none"
-          stroke={getColor(score)}
-          strokeWidth="12"
+          stroke="url(#gaugeGrad)"
+          strokeWidth="14"
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={dashOffset}
           className="animate-gauge"
+          filter="url(#glow)"
         />
+        {/* Tick marks */}
+        {[0, 25, 50, 75, 100].map((tick) => {
+          const angle = Math.PI - (tick / 100) * Math.PI;
+          const x1 = 110 + 95 * Math.cos(angle);
+          const y1 = 110 - 95 * Math.sin(angle);
+          const x2 = 110 + 88 * Math.cos(angle);
+          const y2 = 110 - 88 * Math.sin(angle);
+          return (
+            <line
+              key={tick}
+              x1={x1} y1={y1} x2={x2} y2={y2}
+              stroke="#cbd5e1" strokeWidth="1.5" strokeLinecap="round"
+            />
+          );
+        })}
       </svg>
-      {/* Score display */}
-      <div className="absolute bottom-2 flex flex-col items-center">
-        <span className="text-4xl font-bold text-gray-900">{score}</span>
-        <span className="text-sm text-gray-400">/100</span>
+      <div className="absolute bottom-0 flex flex-col items-center animate-fade-up">
+        <span className="text-5xl font-extrabold tracking-tight text-gray-900">
+          {score}
+        </span>
+        <span className="text-xs font-medium text-gray-400 tracking-wider">OUT OF 100</span>
       </div>
     </div>
   );
 }
 
-export default function HeroMetric() {
+interface StatCardProps {
+  label: string;
+  value: string;
+  sub: string;
+  icon: React.ReactNode;
+  accent: string;
+}
+
+function StatCard({ label, value, sub, icon, accent }: StatCardProps) {
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-      {/* Main Sentiment Gauge */}
-      <div className="card-hover flex flex-col items-center justify-center rounded-2xl border border-gray-100 bg-white p-8 shadow-sm lg:col-span-1">
-        <h2 className="mb-1 text-sm font-medium tracking-wide text-gray-400 uppercase">
-          Net Sentiment Score
-        </h2>
+    <div className="glass-card group flex items-start gap-4 rounded-2xl p-5">
+      <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${accent}`}>
+        {icon}
+      </div>
+      <div className="flex flex-col min-w-0">
+        <span className="section-label">{label}</span>
+        <span className="mt-1 text-2xl font-bold text-gray-900 leading-none">{value}</span>
+        <span className="mt-1 text-[11px] text-gray-400">{sub}</span>
+      </div>
+    </div>
+  );
+}
+
+export default function HeroMetric({
+  netSentimentScore,
+  sentimentChange,
+  weeklyTrend,
+  totalMentions,
+  avgEngagement,
+}: HeroMetricProps) {
+  return (
+    <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 xl:grid-cols-4">
+      {/* Sentiment Gauge */}
+      <div className="glass-card flex flex-col items-center justify-center rounded-2xl p-6 pb-4 md:col-span-1">
+        <span className="section-label mb-2">Net Sentiment Score</span>
         <SentimentGauge score={netSentimentScore} />
-        <div className="mt-3 flex items-center gap-1 text-sm font-medium text-emerald-600">
-          <ArrowUpRight className="h-4 w-4" />
-          <span>↑ {sentimentChange}% from last week</span>
+        <div className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+          <ArrowUpRight className="h-3.5 w-3.5" />
+          {sentimentChange}% from last week
         </div>
       </div>
 
-      {/* Weekly Trend Chart */}
-      <div className="card-hover flex flex-col rounded-2xl border border-gray-100 bg-white p-6 shadow-sm lg:col-span-1">
-        <h2 className="mb-4 text-sm font-medium tracking-wide text-gray-400 uppercase">
-          Sentiment Trend
-        </h2>
-        <div className="flex-1">
-          <ResponsiveContainer width="100%" height={160}>
-            <AreaChart data={weeklyTrend}>
+      {/* Weekly Trend */}
+      <div className="glass-card flex flex-col rounded-2xl p-5 md:col-span-1">
+        <span className="section-label mb-3">7-Day Trend</span>
+        <div className="flex-1 min-h-0">
+          <ResponsiveContainer width="100%" height={170}>
+            <AreaChart data={weeklyTrend} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
               <defs>
-                <linearGradient id="sentGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#6366f1" stopOpacity={0.2} />
-                  <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                <linearGradient id="sentGradientV2" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#6366f1" stopOpacity={0.15} />
+                  <stop offset="100%" stopColor="#6366f1" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <XAxis
                 dataKey="day"
                 axisLine={false}
                 tickLine={false}
-                tick={{ fontSize: 12, fill: "#9ca3af" }}
+                tick={{ fontSize: 11, fill: "#94a3b8", fontWeight: 500 }}
+                dy={8}
               />
-              <YAxis
-                domain={[60, 90]}
-                hide
-              />
+              <YAxis domain={['auto', 'auto']} hide />
               <Tooltip
                 contentStyle={{
-                  borderRadius: "8px",
-                  border: "1px solid #e5e7eb",
+                  borderRadius: "12px",
+                  border: "1px solid #e2e8f0",
                   fontSize: "13px",
+                  boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
                 }}
+                cursor={{ stroke: "#c7d2fe", strokeDasharray: "4 4" }}
               />
               <Area
                 type="monotone"
                 dataKey="score"
                 stroke="#6366f1"
-                strokeWidth={2}
-                fill="url(#sentGradient)"
+                strokeWidth={2.5}
+                fill="url(#sentGradientV2)"
+                dot={{ r: 3, fill: "#6366f1", strokeWidth: 0 }}
+                activeDot={{ r: 5, fill: "#4f46e5", strokeWidth: 2, stroke: "#fff" }}
               />
             </AreaChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-1 lg:col-span-1">
-        <div className="card-hover flex flex-col rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-          <span className="text-sm font-medium tracking-wide text-gray-400 uppercase">
-            Total Mentions
-          </span>
-          <span className="mt-2 text-3xl font-bold text-gray-900">
-            {totalMentions.toLocaleString()}
-          </span>
-          <span className="mt-1 text-xs text-gray-400">Last 7 days</span>
-        </div>
-        <div className="card-hover flex flex-col rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-          <span className="text-sm font-medium tracking-wide text-gray-400 uppercase">
-            Avg. Engagement
-          </span>
-          <span className="mt-2 text-3xl font-bold text-gray-900">
-            {avgEngagement}K
-          </span>
-          <span className="mt-1 text-xs text-gray-400">Per mention</span>
-        </div>
-      </div>
+      {/* Stat cards */}
+      <StatCard
+        label="Total Mentions"
+        value={totalMentions.toLocaleString()}
+        sub="Last 7 days"
+        icon={<Eye className="h-5 w-5 text-indigo-600" />}
+        accent="bg-indigo-50"
+      />
+      <StatCard
+        label="Avg. Engagement"
+        value={`${avgEngagement}K`}
+        sub="Per mention"
+        icon={<Users className="h-5 w-5 text-violet-600" />}
+        accent="bg-violet-50"
+      />
     </div>
   );
 }
