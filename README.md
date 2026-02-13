@@ -1,75 +1,192 @@
-# React + TypeScript + Vite
+# LeapPulse — Brand Intelligence Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> Real-time brand health monitoring dashboard that aggregates social media mentions, sentiment analysis, and competitive intelligence into a single unified view.
 
-Currently, two official plugins are available:
+![React](https://img.shields.io/badge/React-19-blue?logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue?logo=typescript)
+![Vite](https://img.shields.io/badge/Vite-7-purple?logo=vite)
+![Tailwind](https://img.shields.io/badge/Tailwind-4-blue?logo=tailwindcss)
+![Python](https://img.shields.io/badge/Python-3.10+-green?logo=python)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## Features
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+- **Net Sentiment Gauge** — Animated arc gauge showing overall brand sentiment (0–100)
+- **7-Day Trend Chart** — Interactive area chart tracking daily sentiment movement
+- **Priority Triage Feed** — Alert cards sorted by severity (Critical → High → Gold → Neutral)
+- **Platform Breakdown** — Visual progress bars showing mention distribution across Reddit, Twitter/X, LinkedIn, YouTube, and Google News
+- **Sentiment Distribution** — Donut chart with positive/negative/neutral split
+- **Trending Topics** — Tag cloud + ranked list with trend indicators
+- **Dark / Light Mode** — Smooth animated theme toggle with system preference detection
+- **Mock & Live Data Modes** — Toggle between built-in demo data and real-time scraped data
+- **Real-time Updates** — Supabase Realtime subscriptions for live dashboard refresh
 
-Note: This will impact Vite dev & build performances.
+## Tech Stack
 
-## Expanding the ESLint configuration
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 19, TypeScript 5.9, Vite 7 |
+| Styling | Tailwind CSS v4, CSS Custom Properties |
+| Charts | Recharts 3 |
+| Icons | Lucide React |
+| Backend | Python 3.10+, FastAPI, BeautifulSoup |
+| Database | Supabase (PostgreSQL + Realtime) |
+| Sentiment | TextBlob NLP |
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Quick Start
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+```bash
+# Install dependencies
+npm install
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Start dev server
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Open **http://localhost:5173** — the dashboard loads instantly with mock data.  
+No backend or database setup required for the demo.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Production Build
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run build
+npm run preview
 ```
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────┐
+│              React Frontend                     │
+│   Vite + React 19 + Tailwind v4 + Recharts     │
+│                                                 │
+│   ┌────────────┐     ┌──────────────┐           │
+│   │ Mock Data  │     │ Supabase     │  ← Toggle │
+│   │ (built-in) │     │ Realtime     │    modes   │
+│   └────────────┘     └──────┬───────┘           │
+└─────────────────────────────┼───────────────────┘
+                              │
+                    ┌─────────▼─────────┐
+                    │   Supabase DB     │
+                    │   (PostgreSQL)    │
+                    └─────────▲─────────┘
+                              │
+                    ┌─────────┴─────────┐
+                    │  Python Scrapers  │
+                    │  (FastAPI Server) │
+                    │                   │
+                    │  • Reddit         │
+                    │  • Twitter/X      │
+                    │  • LinkedIn       │
+                    │  • Google News    │
+                    │  • YouTube        │
+                    └───────────────────┘
+```
+
+## Project Structure
+
+```
+leappulse/
+├── src/
+│   ├── App.tsx                    # Main layout with data source toggle
+│   ├── main.tsx                   # Entry point with ThemeProvider
+│   ├── index.css                  # CSS variables, theme tokens, animations
+│   ├── components/
+│   │   ├── Header.tsx             # Sticky header + dark/light mode toggle
+│   │   ├── HeroMetric.tsx         # Sentiment gauge + trend chart + KPIs
+│   │   ├── PriorityTriage.tsx     # Priority-sorted mention cards
+│   │   └── InsightsSidebar.tsx    # Pie chart + platform bars + trending topics
+│   ├── hooks/
+│   │   ├── useRealtimeData.ts     # Data fetching, Supabase realtime, mock fallback
+│   │   └── useTheme.tsx           # Dark/light mode context + persistence
+│   ├── lib/
+│   │   ├── supabase.ts            # Supabase client initialization
+│   │   └── utils.ts               # cn() Tailwind merge helper
+│   └── data/
+│       └── mockData.ts            # Built-in demo data + TypeScript interfaces
+│
+├── backend/
+│   ├── server.py                  # FastAPI REST server
+│   ├── main.py                    # Scraper orchestrator + scheduler
+│   ├── config.py                  # Environment configuration
+│   ├── db.py                      # Supabase DB client
+│   ├── sentiment.py               # TextBlob sentiment analysis
+│   ├── aggregator.py              # Metrics computation
+│   ├── seed_mock_data.py          # Seed Supabase with test data
+│   ├── requirements.txt           # Python dependencies
+│   ├── supabase_schema.sql        # Database schema
+│   └── scrapers/                  # Platform-specific scrapers
+│       ├── reddit_scraper.py
+│       ├── twitter_scraper.py
+│       ├── linkedin_scraper.py
+│       ├── google_news_scraper.py
+│       └── youtube_scraper.py
+│
+├── index.html
+├── vite.config.ts
+├── package.json
+├── SETUP.md                       # Detailed setup & configuration guide
+└── README.md
+```
+
+## Dark / Light Mode
+
+The dashboard includes a theme toggle in the header (Sun/Moon icon). Themes use CSS custom properties for smooth animated transitions. The preference is saved to `localStorage` and respects `prefers-color-scheme` on first visit.
+
+## Data Modes
+
+| Mode | Description |
+|------|------------|
+| **Mock Data** (default) | Built-in demo data, no backend required. Purple toggle badge. |
+| **Live Data** | Connects to FastAPI backend → Supabase. Green pulsing badge. |
+
+Click the toggle button beneath the header to switch between modes.
+
+## Full Setup (Live Data)
+
+For real-time scraping with a live backend, see the detailed [SETUP.md](SETUP.md) which covers:
+
+1. Creating a Supabase project & running the schema
+2. Configuring the Python backend with environment variables
+3. Running scrapers (one-time or scheduled)
+4. Connecting the frontend to Supabase for real-time updates
+
+### Quick Backend Start
+
+```bash
+cd backend
+python -m venv venv
+venv\Scripts\activate        # Windows
+# source venv/bin/activate   # macOS/Linux
+pip install -r requirements.txt
+
+# Start the FastAPI server
+uvicorn server:app --reload --port 8000
+```
+
+Then switch to **Live Data** mode in the dashboard.
+
+## Environment Variables
+
+### Frontend (`.env` in project root)
+
+| Variable | Description |
+|----------|-------------|
+| `VITE_SUPABASE_URL` | Supabase project URL |
+| `VITE_SUPABASE_ANON_KEY` | Supabase anon/public API key |
+
+### Backend (`backend/.env`)
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `SUPABASE_URL` | Supabase project URL | — |
+| `SUPABASE_SERVICE_KEY` | Supabase service role key | — |
+| `BRAND_NAME` | Primary brand to monitor | `LeapScholar` |
+| `COMPETITORS` | Comma-separated competitor names | `Yocket,IDP` |
+| `SCRAPE_INTERVAL_MINUTES` | Scrape cycle interval | `15` |
+
+## License
+
+MIT
+

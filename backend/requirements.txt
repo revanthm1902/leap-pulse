@@ -5,3 +5,5 @@ python-dotenv>=1.0
 textblob>=0.18
 schedule>=1.2
 lxml>=5.1
+fastapi>=0.110
+uvicorn>=0.27

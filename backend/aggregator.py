@@ -61,7 +61,7 @@ def compute_platform_breakdown(mentions: list[dict]) -> list[dict]:
 def extract_trending_topics(mentions: list[dict], top_n: int = 8) -> list[dict]:
     """
     Extract hashtags and high-frequency keywords from mentions.
-    Returns top_n trending topics, deduplicated.
+    Returns top_n trending topics, deduplicated and merged.
     """
     tag_counter: Counter[str] = Counter()
 
@@ -72,16 +72,17 @@ def extract_trending_topics(mentions: list[dict], top_n: int = 8) -> list[dict]:
         for tag in tags:
             tag_counter[f"#{tag.lower()}"] += 1
 
-    # Also scan for common study-abroad domain keywords
+    # Scan for common study-abroad domain keywords
+    # Use NON-OVERLAPPING categories to prevent duplicate counting
     domain_keywords = {
-        "#visaupdates": ["visa update", "visa delay", "visa approved", "visa reject"],
+        "#visaupdates": ["visa update", "visa delay", "visa approved", "visa reject", "student visa"],
         "#ielts": ["ielts"],
-        "#studyabroad": ["study abroad"],
+        "#studyabroad": ["study abroad", "masters abroad", "ms abroad"],
         "#scholarship": ["scholarship"],
-        "#studentvisa": ["student visa"],
-        "#mastersabroad": ["masters abroad", "ms abroad"],
         "#universityranking": ["university ranking", "qs ranking"],
-        "#ieltsprep": ["ielts prep", "ielts preparation"],
+        "#counselor": ["counselor", "counselling", "advisor"],
+        "#admissions": ["admission", "acceptance", "accepted", "got admitted"],
+        "#sopwriting": ["sop", "statement of purpose", "personal statement"],
     }
 
     for tag, keywords in domain_keywords.items():
@@ -92,13 +93,34 @@ def extract_trending_topics(mentions: list[dict], top_n: int = 8) -> list[dict]:
         if count > 0:
             tag_counter[tag] += count
 
-    # Deduplicate: normalize all tags to lowercase, pick best casing
-    seen: dict[str, int] = {}
-    for tag, count in tag_counter.items():
-        key = tag.lower()
-        seen[key] = seen.get(key, 0) + count
+    # Merge similar/overlapping tags to prevent duplicates
+    # Build a map of canonical tag -> aliases
+    merge_map: dict[str, list[str]] = {
+        "#ielts": ["#ieltsprep", "#ieltstips", "#ieltsexam", "#ieltstest"],
+        "#visaupdates": ["#studentvisa", "#visaupdate", "#visadelay"],
+        "#studyabroad": ["#mastersabroad", "#msabroad", "#studyoverseas"],
+        "#scholarship": ["#scholarshipalert", "#scholarships"],
+        "#universityranking": ["#universityrankings", "#qsranking"],
+    }
 
-    topics = sorted(seen.items(), key=lambda x: x[1], reverse=True)[:top_n]
+    # Merge aliases into canonical tags
+    merged: dict[str, int] = {}
+    used: set[str] = set()
+    for canonical, aliases in merge_map.items():
+        total = tag_counter.get(canonical, 0)
+        for alias in aliases:
+            total += tag_counter.get(alias, 0)
+            used.add(alias)
+        used.add(canonical)
+        if total > 0:
+            merged[canonical] = total
+
+    # Add remaining tags that weren't merged
+    for tag, count in tag_counter.items():
+        if tag not in used:
+            merged[tag] = merged.get(tag, 0) + count
+
+    topics = sorted(merged.items(), key=lambda x: x[1], reverse=True)[:top_n]
     return [
         {
             "tag": tag,

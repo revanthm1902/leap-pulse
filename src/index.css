@@ -14,6 +14,115 @@
   --color-indigo-950: #1e1b4b;
 }
 
+/* ─────────────────────────────────────────────────────── */
+/*  Theme CSS Custom Properties                           */
+/* ─────────────────────────────────────────────────────── */
+
+:root {
+  /* Background */
+  --bg-page: #f7f8fc;
+  --bg-header: rgba(255, 255, 255, 0.85);
+  --bg-blob-1: rgba(99, 102, 241, 0.06);
+  --bg-blob-2: rgba(139, 92, 246, 0.04);
+
+  /* Cards */
+  --bg-glass: rgba(255, 255, 255, 0.75);
+  --bg-glass-hover: rgba(255, 255, 255, 0.9);
+  --bg-solid: #ffffff;
+  --border-glass: rgba(99, 102, 241, 0.1);
+  --border-glass-hover: rgba(99, 102, 241, 0.2);
+  --border-solid: rgba(99, 102, 241, 0.08);
+  --border-solid-hover: rgba(99, 102, 241, 0.18);
+  --shadow-glass: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+  --shadow-glass-hover: 0 4px 12px rgba(99,102,241,0.08), 0 8px 32px rgba(0,0,0,0.06);
+  --shadow-solid: 0 1px 2px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.03);
+  --shadow-solid-hover: 0 4px 16px rgba(99,102,241,0.06), 0 1px 3px rgba(0,0,0,0.05);
+
+  /* Text */
+  --text-heading: #0f172a;
+  --text-primary: #1e293b;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --text-faint: #cbd5e1;
+
+  /* Borders & misc */
+  --border-header: rgba(0, 0, 0, 0.06);
+  --border-footer: rgba(0, 0, 0, 0.06);
+
+  /* Component tokens */
+  --gauge-track: #e2e8f0;
+  --gauge-tick: #94a3b8;
+  --bar-track: #e2e8f0;
+  --overlay: rgba(0, 0, 0, 0.03);
+  --overlay-hover: rgba(0, 0, 0, 0.06);
+
+  /* Tooltip */
+  --tooltip-bg: #ffffff;
+  --tooltip-text: #1e293b;
+  --tooltip-border: rgba(99, 102, 241, 0.15);
+  --tooltip-shadow: 0 8px 24px rgba(0,0,0,0.1);
+
+  /* Scrollbar */
+  --scrollbar-thumb: rgba(99, 102, 241, 0.15);
+  --scrollbar-thumb-hover: rgba(99, 102, 241, 0.3);
+
+  /* Chart */
+  --chart-gradient-start-opacity: 0.12;
+  --chart-gradient-end-opacity: 0;
+  --chart-cursor: #4338ca;
+  
+  /* Header dot border */
+  --dot-border: #f7f8fc;
+}
+
+.dark {
+  --bg-page: #0b0d14;
+  --bg-header: rgba(11, 13, 20, 0.8);
+  --bg-blob-1: rgba(30, 27, 75, 0.4);
+  --bg-blob-2: rgba(46, 16, 101, 0.3);
+
+  --bg-glass: rgba(15, 18, 30, 0.65);
+  --bg-glass-hover: rgba(20, 24, 40, 0.8);
+  --bg-solid: #111425;
+  --border-glass: rgba(99, 102, 241, 0.1);
+  --border-glass-hover: rgba(99, 102, 241, 0.2);
+  --border-solid: rgba(99, 102, 241, 0.08);
+  --border-solid-hover: rgba(99, 102, 241, 0.18);
+  --shadow-glass: 0 1px 3px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.15);
+  --shadow-glass-hover: 0 4px 12px rgba(99,102,241,0.1), 0 8px 32px rgba(0,0,0,0.2);
+  --shadow-solid: 0 1px 2px rgba(0,0,0,0.2), 0 2px 8px rgba(0,0,0,0.1);
+  --shadow-solid-hover: 0 4px 16px rgba(99,102,241,0.08), 0 1px 3px rgba(0,0,0,0.15);
+
+  --text-heading: #f1f5f9;
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --text-faint: #475569;
+
+  --border-header: rgba(255, 255, 255, 0.06);
+  --border-footer: rgba(255, 255, 255, 0.04);
+
+  --gauge-track: #1e2035;
+  --gauge-tick: #334155;
+  --bar-track: #1e293b;
+  --overlay: rgba(255, 255, 255, 0.04);
+  --overlay-hover: rgba(255, 255, 255, 0.08);
+
+  --tooltip-bg: #1a1d2e;
+  --tooltip-text: #e2e8f0;
+  --tooltip-border: rgba(99, 102, 241, 0.15);
+  --tooltip-shadow: 0 8px 24px rgba(0,0,0,0.3);
+
+  --scrollbar-thumb: rgba(99, 102, 241, 0.2);
+  --scrollbar-thumb-hover: rgba(99, 102, 241, 0.35);
+
+  --chart-gradient-start-opacity: 0.25;
+  --chart-gradient-end-opacity: 0;
+  --chart-cursor: #4338ca;
+  
+  --dot-border: #0b0d14;
+}
+
 @layer base {
   *,
   *::before,
@@ -31,9 +140,11 @@
 
   body {
     margin: 0;
-    background: linear-gradient(135deg, #f0f4ff 0%, #f8fafc 40%, #faf5ff 100%);
-    color: #1e293b;
+    background: var(--bg-page);
+    color: var(--text-primary);
     min-height: 100vh;
+    transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
@@ -82,39 +193,45 @@
   animation: shimmer 3s linear infinite;
 }
 
+/* ── Theme transition ── */
+.theme-transition,
+.theme-transition *,
+.theme-transition *::before,
+.theme-transition *::after {
+  transition: background-color 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              color 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              fill 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              stroke 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
 /* ── Glass Card ── */
 .glass-card {
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.04),
-    0 4px 16px rgba(0, 0, 0, 0.03);
+  background: var(--bg-glass);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border-glass);
+  box-shadow: var(--shadow-glass);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .glass-card:hover {
-  background: rgba(255, 255, 255, 0.88);
-  box-shadow:
-    0 4px 12px rgba(99, 102, 241, 0.08),
-    0 8px 32px rgba(0, 0, 0, 0.06);
+  background: var(--bg-glass-hover);
+  border-color: var(--border-glass-hover);
+  box-shadow: var(--shadow-glass-hover);
   transform: translateY(-2px);
 }
 
 /* ── Solid Card ── */
 .solid-card {
-  background: #ffffff;
-  border: 1px solid #f1f5f9;
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.03),
-    0 2px 8px rgba(0, 0, 0, 0.02);
+  background: var(--bg-solid);
+  border: 1px solid var(--border-solid);
+  box-shadow: var(--shadow-solid);
   transition: all 0.25s ease;
 }
 .solid-card:hover {
-  border-color: #e0e7ff;
-  box-shadow:
-    0 4px 16px rgba(99, 102, 241, 0.06),
-    0 1px 3px rgba(0, 0, 0, 0.04);
+  border-color: var(--border-solid-hover);
+  box-shadow: var(--shadow-solid-hover);
   transform: translateY(-1px);
 }
 
@@ -124,15 +241,32 @@
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 /* ── Recharts tooltip override ── */
 .recharts-tooltip-wrapper .recharts-default-tooltip {
   border-radius: 12px !important;
-  border: 1px solid #e2e8f0 !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
+  border: 1px solid var(--tooltip-border) !important;
+  background: var(--tooltip-bg) !important;
+  color: var(--tooltip-text) !important;
+  box-shadow: var(--tooltip-shadow) !important;
   padding: 10px 14px !important;
   font-size: 13px !important;
+}
+
+/* ── Scrollbar styling ── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
 }
 

@@ -69,6 +69,25 @@ const EMPTY_TREND: { day: string; score: number }[] = [
   { day: "Sun", score: 0 },
 ];
 
+// Map a raw API mention to our SocialMention interface
+function mapApiMention(row: Record<string, unknown>, index: number): SocialMention {
+  return {
+    id: (row.id as string) ?? `api-${index}`,
+    platform: (row.platform as SocialMention["platform"]) ?? "Twitter",
+    content: (row.content as string) ?? "",
+    sentiment_score: (row.sentiment_score as number) ?? 0,
+    engagement: {
+      likes: (row.likes as number) ?? 0,
+      shares: (row.shares as number) ?? 0,
+      comments: (row.comments as number) ?? 0,
+    },
+    author: (row.author as string) ?? "Unknown",
+    timestamp: (row.created_at as string) ?? new Date().toISOString(),
+    source_url: (row.source_url as string) ?? undefined,
+    priority: (row.priority as SocialMention["priority"]) ?? "NEUTRAL",
+  };
+}
+
 // Map a Supabase row to our SocialMention interface
 function mapDbMention(row: Record<string, unknown>): SocialMention {
   return {
@@ -89,23 +108,16 @@ function mapDbMention(row: Record<string, unknown>): SocialMention {
 }
 
 export function useRealtimeData(): DashboardData {
-  const [dataSource, setDataSource] = useState<DataSource>(
-    isSupabaseConfigured ? "live" : "mock"
-  );
-  const [mentions, setMentions] = useState<SocialMention[]>(mockMentions);
+  const [dataSource, setDataSource] = useState<DataSource>("mock");
+  const [mentions, setMentions] = useState<SocialMention[]>([]);
   const [sentimentBreakdown, setSentimentBreakdown] =
-    useState<SentimentBreakdownData[]>(mockSentiment);
+    useState<SentimentBreakdownData[]>([]);
   const [platformBreakdown, setPlatformBreakdown] =
-    useState<PlatformBreakdownData[]>(mockPlatforms);
+    useState<PlatformBreakdownData[]>([]);
   const [trendingTopics, setTrendingTopics] =
-    useState<TrendingTopic[]>(mockTopics);
-  const [metrics, setMetrics] = useState<DashboardMetrics>({
-    netSentiment: mockSentimentScore,
-    sentimentChange: mockChange,
-    totalMentions: mockTotal,
-    avgEngagement: mockEngagement,
-  });
-  const [weeklyTrend, setWeeklyTrend] = useState(mockWeekly);
+    useState<TrendingTopic[]>([]);
+  const [metrics, setMetrics] = useState<DashboardMetrics>(EMPTY_METRICS);
+  const [weeklyTrend, setWeeklyTrend] = useState(EMPTY_TREND);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -117,94 +129,140 @@ export function useRealtimeData(): DashboardData {
     setDataSource((prev) => (prev === "mock" ? "live" : "mock"));
   }, []);
 
-  // Fetch all data from Supabase
-  const fetchLiveData = useCallback(async () => {
+  // Fetch from the FastAPI backend (real scraped data)
+  const fetchFromApi = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const resp = await fetch("/api/all");
+      if (!resp.ok) {
+        throw new Error(`API returned ${resp.status}`);
+      }
+      const data = await resp.json();
+
+      // Map mentions
+      const apiMentions: SocialMention[] = (data.mentions ?? []).map(
+        (m: Record<string, unknown>, i: number) => mapApiMention(m, i)
+      );
+      setMentions(apiMentions);
+
+      // Sentiment distribution
+      setSentimentBreakdown(
+        (data.sentiment_distribution ?? []).map(
+          (r: Record<string, unknown>) => ({
+            label: r.label as string,
+            value: r.value as number,
+            count: r.count as number,
+            color: SENTIMENT_COLORS[r.label as string] ?? "#94a3b8",
+          })
+        )
+      );
+
+      // Platform breakdown
+      setPlatformBreakdown(
+        (data.platform_breakdown ?? []).map(
+          (r: Record<string, unknown>) => ({
+            platform: r.platform as string,
+            value: r.percentage as number,
+            count: r.mention_count as number,
+            color: PLATFORM_COLORS[r.platform as string] ?? "#6366f1",
+          })
+        )
+      );
+
+      // Trending topics
+      setTrendingTopics(
+        (data.trending_topics ?? []).map((r: Record<string, unknown>) => ({
+          tag: r.tag as string,
+          mentions: r.mentions as number,
+          trend: r.trend as TrendingTopic["trend"],
+        }))
+      );
+
+      // Dashboard metrics
+      if (data.dashboard_metrics && Object.keys(data.dashboard_metrics).length > 0) {
+        const m = data.dashboard_metrics as Record<string, unknown>;
+        setMetrics({
+          netSentiment: (m.net_sentiment as number) ?? 0,
+          sentimentChange: (m.sentiment_change as number) ?? 0,
+          totalMentions: (m.total_mentions as number) ?? 0,
+          avgEngagement: (m.avg_engagement as number) ?? 0,
+        });
+      } else {
+        setMetrics(EMPTY_METRICS);
+      }
+
+      // Weekly trend
+      setWeeklyTrend(
+        (data.weekly_trend ?? []).length > 0
+          ? (data.weekly_trend as Record<string, unknown>[]).map(
+              (r: Record<string, unknown>) => ({
+                day: r.day_label as string,
+                score: r.score as number,
+              })
+            )
+          : EMPTY_TREND
+      );
+
+      setLastUpdated(new Date());
+    } catch {
+      // If API is unreachable, fall back to Supabase or show error
+      if (isSupabaseConfigured && supabase) {
+        try {
+          await fetchFromSupabase();
+          return;
+        } catch {
+          // continue to error
+        }
+      }
+      setError("Backend unavailable — switch to Mock Data or start the server");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Fetch from Supabase (fallback)
+  const fetchFromSupabase = useCallback(async () => {
     if (!supabase) return;
     setIsLoading(true);
     setError(null);
 
     try {
-      // Fetch all tables in parallel
       const [mentionsRes, sentimentRes, platformRes, topicsRes, metricsRes, trendRes] =
         await Promise.all([
-          supabase
-            .from("social_mentions")
-            .select("*")
-            .order("created_at", { ascending: false })
-            .limit(50),
-          supabase
-            .from("sentiment_distribution")
-            .select("*")
-            .order("recorded_at", { ascending: false })
-            .limit(3),
-          supabase
-            .from("platform_breakdown")
-            .select("*")
-            .order("recorded_at", { ascending: false })
-            .limit(10),
-          supabase
-            .from("trending_topics")
-            .select("*")
-            .order("mentions", { ascending: false }),
-          supabase
-            .from("dashboard_metrics")
-            .select("*")
-            .order("recorded_at", { ascending: false })
-            .limit(1),
+          supabase.from("social_mentions").select("*").order("created_at", { ascending: false }).limit(50),
+          supabase.from("sentiment_distribution").select("*").order("recorded_at", { ascending: false }).limit(3),
+          supabase.from("platform_breakdown").select("*").order("recorded_at", { ascending: false }).limit(10),
+          supabase.from("trending_topics").select("*").order("mentions", { ascending: false }),
+          supabase.from("dashboard_metrics").select("*").order("recorded_at", { ascending: false }).limit(1),
           supabase.from("weekly_trend").select("*"),
         ]);
 
-      // Log any query errors for debugging
-      const errors = [
-        mentionsRes.error && `mentions: ${mentionsRes.error.message}`,
-        sentimentRes.error && `sentiment: ${sentimentRes.error.message}`,
-        platformRes.error && `platforms: ${platformRes.error.message}`,
-        topicsRes.error && `topics: ${topicsRes.error.message}`,
-        metricsRes.error && `metrics: ${metricsRes.error.message}`,
-        trendRes.error && `trend: ${trendRes.error.message}`,
-      ].filter(Boolean);
+      setMentions(mentionsRes.data?.length ? mentionsRes.data.map(mapDbMention) : []);
 
-      if (errors.length) {
-        console.error("Supabase query errors:", errors);
-        setError(errors.join("; "));
-      }
-
-      // Update mentions (use empty array if no data, don't fallback to mock)
-      setMentions(
-        mentionsRes.data?.length
-          ? mentionsRes.data.map(mapDbMention)
-          : []
-      );
-
-      // Update sentiment breakdown
       setSentimentBreakdown(
         sentimentRes.data?.length
-          ? sentimentRes.data.map(
-              (r: Record<string, unknown>) => ({
-                label: r.label as string,
-                value: r.value as number,
-                count: r.count as number,
-                color: SENTIMENT_COLORS[r.label as string] ?? "#94a3b8",
-              })
-            )
+          ? sentimentRes.data.map((r: Record<string, unknown>) => ({
+              label: r.label as string,
+              value: r.value as number,
+              count: r.count as number,
+              color: SENTIMENT_COLORS[r.label as string] ?? "#94a3b8",
+            }))
           : []
       );
 
-      // Update platform breakdown
       setPlatformBreakdown(
         platformRes.data?.length
-          ? platformRes.data.map(
-              (r: Record<string, unknown>) => ({
-                platform: r.platform as string,
-                value: r.percentage as number,
-                count: r.mention_count as number,
-                color: PLATFORM_COLORS[r.platform as string] ?? "#6366f1",
-              })
-            )
+          ? platformRes.data.map((r: Record<string, unknown>) => ({
+              platform: r.platform as string,
+              value: r.percentage as number,
+              count: r.mention_count as number,
+              color: PLATFORM_COLORS[r.platform as string] ?? "#6366f1",
+            }))
           : []
       );
 
-      // Update trending topics
       setTrendingTopics(
         topicsRes.data?.length
           ? topicsRes.data.map((r: Record<string, unknown>) => ({
@@ -215,7 +273,6 @@ export function useRealtimeData(): DashboardData {
           : []
       );
 
-      // Update dashboard metrics
       if (metricsRes.data?.length) {
         const m = metricsRes.data[0] as Record<string, unknown>;
         setMetrics({
@@ -228,7 +285,6 @@ export function useRealtimeData(): DashboardData {
         setMetrics(EMPTY_METRICS);
       }
 
-      // Update weekly trend
       setWeeklyTrend(
         trendRes.data?.length
           ? trendRes.data.map((r: Record<string, unknown>) => ({
@@ -240,19 +296,19 @@ export function useRealtimeData(): DashboardData {
 
       setLastUpdated(new Date());
     } catch (err) {
-      console.error("Failed to fetch live data:", err);
+      console.error("Failed to fetch from Supabase:", err);
       setError(err instanceof Error ? err.message : "Connection failed");
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  // Subscribe to real-time changes
+  // Subscribe to data changes
   useEffect(() => {
-    if (dataSource !== "live" || !supabase) {
+    if (dataSource !== "live") {
       // Clean up existing channel
-      if (channelRef.current) {
-        supabase?.removeChannel(channelRef.current);
+      if (channelRef.current && supabase) {
+        supabase.removeChannel(channelRef.current);
         channelRef.current = null;
       }
 
@@ -275,31 +331,33 @@ export function useRealtimeData(): DashboardData {
       return;
     }
 
-    // Initial fetch
-    fetchLiveData();
+    // Primary: fetch from FastAPI backend (real scraped data)
+    fetchFromApi();
 
-    // Subscribe to real-time updates
-    const channel = supabase
-      .channel("leappulse-realtime")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "social_mentions" },
-        () => fetchLiveData()
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "dashboard_metrics" },
-        () => fetchLiveData()
-      )
-      .subscribe();
+    // Also subscribe to Supabase real-time if configured
+    if (isSupabaseConfigured && supabase) {
+      const channel = supabase
+        .channel("leappulse-realtime")
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "social_mentions" },
+          () => fetchFromApi()
+        )
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "dashboard_metrics" },
+          () => fetchFromApi()
+        )
+        .subscribe();
 
-    channelRef.current = channel;
+      channelRef.current = channel;
 
-    return () => {
-      supabase?.removeChannel(channel);
-      channelRef.current = null;
-    };
-  }, [dataSource, fetchLiveData]);
+      return () => {
+        supabase?.removeChannel(channel);
+        channelRef.current = null;
+      };
+    }
+  }, [dataSource, fetchFromApi]);
 
   return {
     mentions,

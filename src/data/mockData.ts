@@ -128,9 +128,9 @@ export const trendingTopics: TrendingTopic[] = [
   { tag: "#StudyInAustralia", mentions: 1456, trend: "stable" },
   { tag: "#ScholarshipAlert", mentions: 1230, trend: "up" },
   { tag: "#UniversityRankings", mentions: 987, trend: "down" },
-  { tag: "#StudentVisa", mentions: 876, trend: "up" },
-  { tag: "#MastersAbroad", mentions: 754, trend: "stable" },
-  { tag: "#IELTSPrep", mentions: 623, trend: "up" },
+  { tag: "#Admissions", mentions: 876, trend: "up" },
+  { tag: "#SOPWriting", mentions: 754, trend: "stable" },
+  { tag: "#Counselor", mentions: 623, trend: "up" },
 ];
 
 // Aggregate metrics

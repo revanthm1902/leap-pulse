@@ -7,6 +7,7 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
+import { useTheme } from "../hooks/useTheme";
 
 interface HeroMetricProps {
   netSentimentScore: number;
@@ -42,9 +43,9 @@ function SentimentGauge({ score }: { score: number }) {
         <path
           d="M 25 110 A 85 85 0 0 1 195 110"
           fill="none"
-          stroke="#f1f5f9"
           strokeWidth="14"
           strokeLinecap="round"
+          style={{ stroke: "var(--gauge-track)" }}
         />
         {/* Progress */}
         <path
@@ -69,16 +70,17 @@ function SentimentGauge({ score }: { score: number }) {
             <line
               key={tick}
               x1={x1} y1={y1} x2={x2} y2={y2}
-              stroke="#cbd5e1" strokeWidth="1.5" strokeLinecap="round"
+              strokeWidth="1.5" strokeLinecap="round"
+              style={{ stroke: "var(--gauge-tick)" }}
             />
           );
         })}
       </svg>
       <div className="absolute bottom-0 flex flex-col items-center animate-fade-up">
-        <span className="text-5xl font-extrabold tracking-tight text-gray-900">
+        <span className="text-5xl font-extrabold tracking-tight" style={{ color: "var(--text-heading)" }}>
           {score}
         </span>
-        <span className="text-xs font-medium text-gray-400 tracking-wider">OUT OF 100</span>
+        <span className="text-xs font-medium tracking-wider" style={{ color: "var(--text-muted)" }}>OUT OF 100</span>
       </div>
     </div>
   );
@@ -100,8 +102,8 @@ function StatCard({ label, value, sub, icon, accent }: StatCardProps) {
       </div>
       <div className="flex flex-col min-w-0">
         <span className="section-label">{label}</span>
-        <span className="mt-1 text-2xl font-bold text-gray-900 leading-none">{value}</span>
-        <span className="mt-1 text-[11px] text-gray-400">{sub}</span>
+        <span className="mt-1 text-2xl font-bold leading-none" style={{ color: "var(--text-heading)" }}>{value}</span>
+        <span className="mt-1 text-[11px]" style={{ color: "var(--text-muted)" }}>{sub}</span>
       </div>
     </div>
   );
@@ -114,13 +116,24 @@ export default function HeroMetric({
   totalMentions,
   avgEngagement,
 }: HeroMetricProps) {
+  const { theme } = useTheme();
+
+  const tooltipStyle = {
+    borderRadius: "12px",
+    border: "1px solid var(--tooltip-border)",
+    background: "var(--tooltip-bg)",
+    color: "var(--tooltip-text)",
+    fontSize: "13px",
+    boxShadow: "var(--tooltip-shadow)",
+  };
+
   return (
     <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 xl:grid-cols-4">
       {/* Sentiment Gauge */}
       <div className="glass-card flex flex-col items-center justify-center rounded-2xl p-6 pb-4 md:col-span-1">
         <span className="section-label mb-2">Net Sentiment Score</span>
         <SentimentGauge score={netSentimentScore} />
-        <div className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+        <div className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 text-xs font-semibold text-emerald-400">
           <ArrowUpRight className="h-3.5 w-3.5" />
           {sentimentChange}% from last week
         </div>
@@ -134,26 +147,21 @@ export default function HeroMetric({
             <AreaChart data={weeklyTrend} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
               <defs>
                 <linearGradient id="sentGradientV2" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#6366f1" stopOpacity={0.15} />
-                  <stop offset="100%" stopColor="#6366f1" stopOpacity={0} />
+                  <stop offset="0%" stopColor="#818cf8" stopOpacity={theme === "dark" ? 0.25 : 0.12} />
+                  <stop offset="100%" stopColor="#818cf8" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <XAxis
                 dataKey="day"
                 axisLine={false}
                 tickLine={false}
-                tick={{ fontSize: 11, fill: "#94a3b8", fontWeight: 500 }}
+                tick={{ fontSize: 11, fill: theme === "dark" ? "#64748b" : "#94a3b8", fontWeight: 500 }}
                 dy={8}
               />
               <YAxis domain={['auto', 'auto']} hide />
               <Tooltip
-                contentStyle={{
-                  borderRadius: "12px",
-                  border: "1px solid #e2e8f0",
-                  fontSize: "13px",
-                  boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
-                }}
-                cursor={{ stroke: "#c7d2fe", strokeDasharray: "4 4" }}
+                contentStyle={tooltipStyle}
+                cursor={{ stroke: "#4338ca", strokeDasharray: "4 4" }}
               />
               <Area
                 type="monotone"
@@ -162,7 +170,7 @@ export default function HeroMetric({
                 strokeWidth={2.5}
                 fill="url(#sentGradientV2)"
                 dot={{ r: 3, fill: "#6366f1", strokeWidth: 0 }}
-                activeDot={{ r: 5, fill: "#4f46e5", strokeWidth: 2, stroke: "#fff" }}
+                activeDot={{ r: 5, fill: "#4f46e5", strokeWidth: 2, stroke: theme === "dark" ? "#fff" : "#f8fafc" }}
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -174,15 +182,15 @@ export default function HeroMetric({
         label="Total Mentions"
         value={totalMentions.toLocaleString()}
         sub="Last 7 days"
-        icon={<Eye className="h-5 w-5 text-indigo-600" />}
-        accent="bg-indigo-50"
+        icon={<Eye className="h-5 w-5 text-indigo-400" />}
+        accent="bg-indigo-500/15"
       />
       <StatCard
         label="Avg. Engagement"
         value={`${avgEngagement}K`}
         sub="Per mention"
-        icon={<Users className="h-5 w-5 text-violet-600" />}
-        accent="bg-violet-50"
+        icon={<Users className="h-5 w-5 text-violet-400" />}
+        accent="bg-violet-500/15"
       />
     </div>
   );

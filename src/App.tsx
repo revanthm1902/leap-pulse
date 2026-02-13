@@ -21,17 +21,21 @@ function App() {
   } = useRealtimeData();
 
   return (
-    <div className="relative min-h-screen">
+    <div className="relative min-h-screen" style={{ background: "var(--bg-page)" }}>
       {/* Subtle background decoration */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -right-40 -top-40 h-125 w-125 rounded-full bg-indigo-100/30 blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 h-100 w-100 rounded-full bg-violet-100/20 blur-3xl" />
+        <div
+          className="absolute -right-40 -top-40 h-125 w-125 rounded-full blur-3xl transition-colors duration-700"
+          style={{ background: "var(--bg-blob-1)" }}
+        />
+        <div
+          className="absolute -bottom-40 -left-40 h-100 w-100 rounded-full blur-3xl transition-colors duration-700"
+          style={{ background: "var(--bg-blob-2)" }}
+        />
       </div>
 
       <div className="relative z-10">
-        <Header
-          alertCount={mentions.filter((m) => m.priority === "CRITICAL ALERT" || m.priority === "MARKETING GOLD").length}
-        />
+        <Header />
 
         <main className="mx-auto max-w-350 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
           {/* Data Source Toggle */}
@@ -41,25 +45,25 @@ function App() {
                 onClick={toggleDataSource}
                 className={`group inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold shadow-sm backdrop-blur transition-all hover:shadow-md ${
                   dataSource === "live"
-                    ? "border-emerald-200 bg-emerald-50/80"
-                    : "border-violet-200 bg-violet-50/80"
+                    ? "border-emerald-500/25 bg-emerald-500/10"
+                    : "border-violet-500/25 bg-violet-500/10"
                 }`}
               >
                 {dataSource === "live" ? (
                   <>
-                    <Database className="h-3.5 w-3.5 text-emerald-600" />
-                    <span className="text-emerald-800">Live Data</span>
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <Database className="h-3.5 w-3.5 text-emerald-400" />
+                    <span className="text-emerald-400">Live Data</span>
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   </>
                 ) : (
                   <>
-                    <TestTubeDiagonal className="h-3.5 w-3.5 text-violet-600" />
-                    <span className="text-violet-800">Mock Data</span>
-                    <span className="h-1.5 w-1.5 rounded-full bg-violet-500" />
+                    <TestTubeDiagonal className="h-3.5 w-3.5 text-violet-400" />
+                    <span className="text-violet-500">Mock Data</span>
+                    <span className="h-1.5 w-1.5 rounded-full bg-violet-400" />
                   </>
                 )}
               </button>
-              <span className="text-[10px] font-medium text-gray-400">
+              <span className="text-[10px] font-medium" style={{ color: "var(--text-muted)" }}>
                 Click to switch
               </span>
               {isLoading && (
@@ -68,13 +72,13 @@ function App() {
             </div>
             <div className="flex items-center gap-3">
               {error && (
-                <div className="flex items-center gap-1.5 rounded-full bg-red-50 px-3 py-1 text-[11px] text-red-600">
+                <div className="flex items-center gap-1.5 rounded-full bg-red-500/10 border border-red-500/20 px-3 py-1 text-[11px] text-red-400">
                   <AlertCircle className="h-3 w-3" />
                   {error.slice(0, 60)}
                 </div>
               )}
               {lastUpdated && dataSource === "live" && (
-                <div className="flex items-center gap-1.5 text-[11px] text-gray-400">
+                <div className="flex items-center gap-1.5 text-[11px]" style={{ color: "var(--text-muted)" }}>
                   <RefreshCw className="h-3 w-3" />
                   Updated {lastUpdated.toLocaleTimeString()}
                 </div>
@@ -109,12 +113,12 @@ function App() {
         </main>
 
         {/* Footer */}
-        <footer className="mt-8 border-t border-gray-100/60 py-6">
+        <footer className="mt-8 py-6" style={{ borderTop: "1px solid var(--border-footer)" }}>
           <div className="mx-auto max-w-350 flex flex-col items-center gap-2 px-4 sm:flex-row sm:justify-between sm:px-6 lg:px-8">
-            <span className="text-[11px] font-medium text-gray-400">
+            <span className="text-[11px] font-medium" style={{ color: "var(--text-muted)" }}>
               &copy; {new Date().getFullYear()} LeapPulse
             </span>
-            <span className="text-[11px] text-gray-300">
+            <span className="text-[11px]" style={{ color: "var(--text-faint)" }}>
               Brand Intelligence Platform &middot; Real-time Monitoring
             </span>
           </div>

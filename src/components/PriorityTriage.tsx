@@ -27,7 +27,7 @@ function getPriorityStyle(priority: SocialMention["priority"]) {
     case "CRITICAL ALERT":
       return {
         border: "border-l-red-500",
-        badgeBg: "bg-red-50 text-red-700 ring-1 ring-red-600/10",
+        badgeBg: "bg-red-500/10 text-red-400 ring-1 ring-red-500/20",
         icon: <CircleAlert className="h-3 w-3" />,
         label: "CRITICAL",
         glow: "shadow-red-500/5",
@@ -35,7 +35,7 @@ function getPriorityStyle(priority: SocialMention["priority"]) {
     case "HIGH PRIORITY":
       return {
         border: "border-l-amber-400",
-        badgeBg: "bg-amber-50 text-amber-700 ring-1 ring-amber-600/10",
+        badgeBg: "bg-amber-500/10 text-amber-400 ring-1 ring-amber-500/20",
         icon: <AlertTriangle className="h-3 w-3" />,
         label: "HIGH",
         glow: "shadow-amber-500/5",
@@ -43,15 +43,15 @@ function getPriorityStyle(priority: SocialMention["priority"]) {
     case "MARKETING GOLD":
       return {
         border: "border-l-emerald-500",
-        badgeBg: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/10",
+        badgeBg: "bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20",
         icon: <Sparkles className="h-3 w-3" />,
         label: "GOLD",
         glow: "shadow-emerald-500/5",
       };
     default:
       return {
-        border: "border-l-gray-200",
-        badgeBg: "bg-gray-50 text-gray-500",
+        border: "border-l-slate-300",
+        badgeBg: "bg-slate-500/10 text-slate-400",
         icon: null,
         label: "",
         glow: "",
@@ -75,10 +75,10 @@ function SentimentMeter({ score }: { score: number }) {
   const width = Math.abs(score) * 100;
   return (
     <div className="flex items-center gap-2">
-      <div className="h-1.5 w-20 overflow-hidden rounded-full bg-gray-100">
+      <div className="h-1.5 w-20 overflow-hidden rounded-full" style={{ background: "var(--bar-track)" }}>
         <div
           className={cn(
-            "h-full rounded-full transition-all",
+            "h-full rounded-full transition-all duration-500",
             isPositive
               ? "bg-linear-to-r from-emerald-400 to-emerald-500"
               : "bg-linear-to-r from-red-400 to-red-500"
@@ -89,7 +89,7 @@ function SentimentMeter({ score }: { score: number }) {
       <span
         className={cn(
           "min-w-12 text-right text-xs font-semibold tabular-nums",
-          isPositive ? "text-emerald-600" : "text-red-600"
+          isPositive ? "text-emerald-500" : "text-red-500"
         )}
       >
         {isPositive ? "+" : ""}
@@ -131,10 +131,10 @@ function AlertCard({
             {platform.icon}
           </span>
           <div className="flex flex-col min-w-0">
-            <span className="truncate text-sm font-semibold text-gray-900">
+            <span className="truncate text-sm font-semibold" style={{ color: "var(--text-heading)" }}>
               {mention.author}
             </span>
-            <span className="text-[11px] text-gray-400">
+            <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
               {mention.platform} · {timeAgo(mention.timestamp)}
             </span>
           </div>
@@ -153,28 +153,28 @@ function AlertCard({
       </div>
 
       {/* Content */}
-      <p className="mb-4 text-[13px] leading-relaxed text-gray-600 line-clamp-3">
+      <p className="mb-4 text-[13px] leading-relaxed line-clamp-3" style={{ color: "var(--text-secondary)" }}>
         {mention.content}
       </p>
 
       {/* Bottom row: engagement + sentiment */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3 text-xs text-gray-400">
-          <span className="flex items-center gap-1 rounded-md bg-gray-50 px-2 py-1">
+        <div className="flex items-center gap-3 text-xs" style={{ color: "var(--text-muted)" }}>
+          <span className="flex items-center gap-1 rounded-md px-2 py-1" style={{ background: "var(--overlay)" }}>
             <Heart className="h-3 w-3 text-pink-400" />
-            <span className="font-medium text-gray-600">
+            <span className="font-medium" style={{ color: "var(--text-primary)" }}>
               {mention.engagement.likes.toLocaleString()}
             </span>
           </span>
-          <span className="flex items-center gap-1 rounded-md bg-gray-50 px-2 py-1">
+          <span className="flex items-center gap-1 rounded-md px-2 py-1" style={{ background: "var(--overlay)" }}>
             <Share2 className="h-3 w-3 text-blue-400" />
-            <span className="font-medium text-gray-600">
+            <span className="font-medium" style={{ color: "var(--text-primary)" }}>
               {mention.engagement.shares}
             </span>
           </span>
-          <span className="hidden items-center gap-1 rounded-md bg-gray-50 px-2 py-1 sm:flex">
+          <span className="hidden items-center gap-1 rounded-md px-2 py-1 sm:flex" style={{ background: "var(--overlay)" }}>
             <MessageCircle className="h-3 w-3 text-indigo-400" />
-            <span className="font-medium text-gray-600">
+            <span className="font-medium" style={{ color: "var(--text-primary)" }}>
               {mention.engagement.comments}
             </span>
           </span>
@@ -187,9 +187,10 @@ function AlertCard({
               href={mention.source_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="rounded-lg p-1.5 text-gray-300 opacity-0 transition-all group-hover:opacity-100 hover:bg-indigo-50 hover:text-indigo-600"
+              className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-indigo-400 transition-all hover:bg-indigo-500/10"
             >
               <ExternalLink className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Open</span>
             </a>
           )}
         </div>
@@ -218,26 +219,26 @@ export default function PriorityTriage({ mentions }: { mentions: SocialMention[]
     <section>
       <div className="mb-5 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h2 className="text-base font-semibold text-gray-900 sm:text-lg">
+          <h2 className="text-base font-semibold sm:text-lg" style={{ color: "var(--text-heading)" }}>
             Priority Triage
           </h2>
           {criticalCount > 0 && (
-            <span className="flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-600 ring-1 ring-red-600/10">
+            <span className="flex items-center gap-1 rounded-full bg-red-500/10 px-2 py-0.5 text-[10px] font-bold text-red-400 ring-1 ring-red-500/20">
               <CircleAlert className="h-3 w-3" />
               {criticalCount} critical
             </span>
           )}
         </div>
-        <span className="rounded-full bg-gray-50 px-3 py-1 text-[11px] font-medium text-gray-500">
+        <span className="rounded-full px-3 py-1 text-[11px] font-medium" style={{ background: "var(--overlay)", color: "var(--text-secondary)" }}>
           {mentions.length} mentions
         </span>
       </div>
       <div className="flex flex-col gap-3">
         {sorted.length === 0 ? (
           <div className="glass-card flex flex-col items-center justify-center rounded-2xl py-12 text-center">
-            <MessageCircle className="mb-3 h-8 w-8 text-gray-300" />
-            <p className="text-sm font-medium text-gray-400">No mentions found</p>
-            <p className="mt-1 text-xs text-gray-300">Run the scraper or switch to Mock Data</p>
+            <MessageCircle className="mb-3 h-8 w-8" style={{ color: "var(--text-faint)" }} />
+            <p className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>No mentions found</p>
+            <p className="mt-1 text-xs" style={{ color: "var(--text-faint)" }}>Run the scraper or switch to Mock Data</p>
           </div>
         ) : (
           sorted.map((mention, i) => (
